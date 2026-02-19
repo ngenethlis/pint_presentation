@@ -1,48 +1,102 @@
-# Evaluation and Critiques
+# Evaluation
 
 ---
 ## Does it work?
 
-#### Congestion Control HPCC
+#### Congestion Control (HPCC)
 
-__PINT__ achieves:
-- similar FCT to full-overhead INT
-- better goodput for long flows since it saves bandwidth
+<v-clicks>
 
-#### Path tracing
+- Similar FCT to full-overhead INT, better goodput for long flows
+- Works well even when only $p = 1/16$ of packets carry the query digest
+- At 70% load: __71% goodput improvement__ over standard INT
 
-__PINT__ outperforms other approaches (e.g PPM, AMS) by requiring 7-10x less packets
+</v-clicks>
 
-#### Latency
+#### Path Tracing
+
+<v-clicks>
+
+- Kentucky Datalink ($D=59$): only __42 packets__ avg to trace full path
+- Competing methods (PPM, AMS) need __1000-5000+ packets__
+- 25-36x fewer packets than state-of-the-art
+
+</v-clicks>
+
+---
+
+## Combined Experiment
+
+<v-click>
+
+Run all 3 queries concurrently with 16-bit global budget (8 bits per query)
+
+</v-click>
+
+<v-clicks>
+
+- HPCC: short flows 6.6% slower, long flows unaffected
+- Path tracing: packet count increases only 0.5% vs running alone
+- Latency estimation: relative error increases only 0.7%
+
+</v-clicks>
+
+<v-click>
+
+Each packet carries digests for 2 of the 3 concurrent queries
+
+</v-click>
 
 ---
 
-# The good
+# The Good
 
-1. Works, written in P4, runs on commodity hardware
-2. Flexible, user defines bit budget that works for their usecase
-3. Programable querries
+<v-clicks>
+
+1. __Practical__: implemented in P4, runs on commodity programmable switches
+2. __Flexible__: user defines bit budget per use case
+3. __Composable__: multiple queries run concurrently within budget
+4. __Connects to theory__: distributed coding, coupon collector, sketches
+
+</v-clicks>
+
+---
+
+
+# The Bad
+
+<v-clicks>
+
+1. __Short flows__: path tracing needs many packets, single-packet flows (common in datacenters) cannot be traced
+2. __Probabilistic nature__: never get perfect data for a single specific packet, need aggregation over flow
+3. __Route changes__: if route changes mid-flow, decoding becomes complex (flowlet-level tracking needed)
+4. __Manual execution plan__: query engine currently requires manual configuration of bit budget allocation
+
+</v-clicks>
 
 ---
 
+# Accuracy vs Overhead: not the only tradeoff
 
-# The bad
+<v-click>
 
-1. Short flows: Path tracing needs __many__ packets, signle packet flows (common in datacenters) cannot be traced
+__OmniMon__ achieves full accuracy (0 error) while being resource efficient
 
-2. Probablistic Nature: Never get perfect data for single specific packet, need aggregation
+Instead of splitting data into packets, it splits the __work__: hosts count, switches track flows, central controller merges
 
-3. Routing challenges: If route changes mid-flow decoding becomes complex
+</v-click>
 
----
-# Accuracy vs Overhead isn't an absolute tradeoff
+<v-click>
 
-OmniMon, achieves full accuracy (0 error) while still being resource efficient,
-instead of splitting data into packets, it splits the work: hosts count, switches track flows and central controller merges the data.
+PINT saves more __bandwidth__; OmniMon wins on __precision__
 
-PINT saves more Bandwidth, Omnimon wins on precision.
+</v-click>
 
-PINT operates on the assumption that we __must__ sacrifice accuracy for performance, but other architectures prove you can have accuracy if you involve end-hosts
+<v-click>
+
+PINT assumes we __must__ sacrifice accuracy for performance, but other architectures prove you can have accuracy if you involve end-hosts
+
+</v-click>
 
 
 ---
@@ -51,11 +105,19 @@ PINT operates on the assumption that we __must__ sacrifice accuracy for performa
 
 # Summary
 
-__PINT__ trades immediate precision for bandwidth efficiency using Distributed Coding and Sketches.
+<v-clicks>
 
-Enables telemetry in production networks without performance penalties
+- __PINT__ trades immediate precision for bandwidth efficiency using __Distributed Coding__ and __Sketches__
+- Enables telemetry in production networks without performance penalties
+- 16 bits per packet $\rightarrow$ 3 concurrent queries with near-full-INT visibility
 
-Can we apply tihs to security (DDoS detection) where single packet precision is critical?
+</v-clicks>
+
+<v-click>
+
+Can we apply this to __security__ (DDoS detection) where single-packet precision is critical?
+
+</v-click>
 
 ---
 layout : end

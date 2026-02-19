@@ -23,7 +23,9 @@ duration: 20min
 
 COMP0252 Presentation
 
-Nikolaos Genethlis slides at 
+Ben Basat et al., SIGCOMM 2020
+
+Nikolaos Genethlis
 
 <div class="abs-br m-6 text-xl">
   <a href="https://github.com/ProbabilisticINT" target="_blank" class="slidev-icon-btn">
