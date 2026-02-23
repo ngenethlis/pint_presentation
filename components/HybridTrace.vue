@@ -2,31 +2,31 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const PACKETS = [
-  { name: 'p₁', mode: 'Baseline', switches: [0, 1, 0, 0, 0], digest: 'S₂', known: '{ S₂ }',
+  { name: 'p₁', mode: 'Baseline', switches: [0, 1, 0, 0, 0], digest: 'S₂', known: '{ S2 }',
     note: 'Baseline layer: single switch ID recorded directly' },
 
-  { name: 'p₂', mode: 'Baseline', switches: [0, 0, 0, 0, 1], digest: 'S₅', known: '{ S₂, S₅ }',
+  { name: 'p₂', mode: 'Baseline', switches: [0, 0, 0, 0, 1], digest: 'S₅', known: '{ S2, S5 }',
     note: 'Another isolated hop recovered' },
 
-  { name: 'p₃', mode: 'Baseline', switches: [1, 0, 0, 0, 0], digest: 'S₁', known: '{ S₁, S₂, S₅ }',
-    note: '3 easy hops found — Baseline excels here' },
+  { name: 'p₃', mode: 'Baseline', switches: [1, 0, 0, 0, 0], digest: 'S₁', known: '{ S1, S2, S5 }',
+    note: '3 isolated hops recovered' },
 
-  { name: 'p₄', mode: 'XOR', switches: [0, 0, 1, 1, 0], digest: 'S₃ ⊕ S₄', known: '{ S₁, S₂, S₅ }',
+  { name: 'p₄', mode: 'XOR', switches: [0, 0, 1, 1, 0], digest: 'S₃ ⊕ S₄', known: '{ S1, S2, S5 }',
     eqs: [{ text: 'p₄: S₃ ⊕ S₄', status: '2 unknowns — wait' }],
     note: 'XOR layer: adds equation to system, not yet solvable' },
 
-  { name: 'p₅', mode: 'Baseline', switches: [0, 1, 0, 0, 0], digest: 'S₂', known: '{ S₁, S₂, S₅ }',
+  { name: 'p₅', mode: 'Baseline', switches: [0, 1, 0, 0, 0], digest: 'S₂', known: '{ S1, S2, S5 }',
     eqs: [{ text: 'p₄: S₃ ⊕ S₄', status: '2 unknowns — wait' }],
     note: 'Duplicate Baseline — wasted packet' },
 
-  { name: 'p₆', mode: 'XOR', switches: [0, 0, 0, 1, 0], digest: 'S₄', known: '{ S₁, S₂, S₄, S₅ }',
+  { name: 'p₆', mode: 'XOR', switches: [0, 0, 0, 1, 0], digest: 'S₄', known: '{ S1, S2, S4, S5 }',
     eqs: [
       { text: 'p₄: S₃ ⊕ S₄', status: '2 unknowns' },
       { text: 'p₆: S₄', status: '1 unknown → solve!', done: true }
     ],
     note: '1 unknown → decode S₄ directly' },
 
-  { name: 'back-sub into p₄', mode: 'XOR', switches: [0, 0, 1, 0, 0], digest: 'sub S₄ → S₃', known: '{ S₁, S₂, S₃, S₄, S₅ }',
+  { name: 'back-sub into p₄', mode: 'XOR', switches: [0, 0, 1, 0, 0], digest: 'sub S₄ → S₃', known: '{ S1, S2, S3, S4, S5 }',
     eqs: [
       { text: 'p₄: S₃ ⊕ <s>S₄</s>', status: 'substitute S₄ → solve S₃', done: true },
       { text: 'p₆: S₄',              status: '✓ solved', done: true }

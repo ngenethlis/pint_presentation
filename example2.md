@@ -30,6 +30,8 @@ __Why $k \ln k$?__ After collecting $j$ of $k$ IDs, any packet reveals a new one
 
 $$\mathbb{E}[\text{total packets}] = \sum_{j=0}^{k-1} \frac{k}{k-j} = k \sum_{i=1}^{k} \frac{1}{i} = k H_k \approx k \ln k$$
 
+($H_k = 1 + \tfrac{1}{2} + \cdots + \tfrac{1}{k}$ is the $k$-th harmonic number; $H_k \approx \ln k$ by the integral test)
+
 </v-click>
 
 <v-click>
@@ -68,6 +70,8 @@ Each packet defines a __linear equation over $\mathbb{F}_2$__:
 
 $$\bigoplus_{\{i\,:\,g(p_j,i) < \tfrac{1}{d}\}} s_i \;=\; \text{digest}(p_j)$$
 
+($\mathbb{F}_2 = \{0,1\}$ — addition is XOR: $1 \oplus 1 = 0$, $1 \oplus 0 = 1$; arithmetic never overflows a single bit)
+
 The receiver uses the same hash $g$ to reconstruct which switches participated
 
 </v-click>
@@ -102,23 +106,8 @@ layout: default
 
 Pure XOR: efficient but complex &nbsp;|&nbsp; Pure Baseline: simple but slow
 
-<v-click>
 
-__Solution: Interleave both schemes across layers__
-
-</v-click>
-
-<v-clicks>
-
-- **Layer 0** (Baseline): easy hops found quickly, with $\Pr = \tau \approx 3/4$
-- **Layers 1..$\mathcal{L}$** (XOR): clean up remaining hops efficiently
-- Paper shows __1-2 XOR layers__ suffice in practice
-
-</v-clicks>
-
----
-
-### Hybrid: Worked Example ($k = 5$, $\mathcal{L}=2$)
+__Worked Example__ with ($k = 5$, $\mathcal{L}=2$)
 
 Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR ($1 - \tau = 1/4$)
 

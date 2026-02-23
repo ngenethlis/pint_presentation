@@ -6,21 +6,21 @@ const PACKETS = [
     eqs: [{ text: 'p₁: S₂ ⊕ S₄', status: '2 unknowns — wait' }],
     note: 'Two unknowns, cannot solve yet' },
 
-  { name: 'p₂',  switches: [0, 0, 0, 1, 0], digest: 'S₄', known: '{ S₄ }',
+  { name: 'p₂',  switches: [0, 0, 0, 1, 0], digest: 'S₄', known: '{ S4 }',
     eqs: [
       { text: 'p₁: S₂ ⊕ S₄', status: '2 unknowns' },
       { text: 'p₂: S₄',       status: '1 unknown → solve!', done: true }
     ],
     note: 'One unknown → solve directly: S₄ decoded' },
 
-  { name: 'back-sub into p₁', switches: [0, 1, 0, 0, 0], digest: 'sub S₄ → S₂', known: '{ S₂, S₄ }',
+  { name: 'back-sub into p₁', switches: [0, 1, 0, 0, 0], digest: 'sub S₄ → S₂', known: '{ S2, S4 }',
     eqs: [
       { text: 'p₁: S₂ ⊕ <s>S₄</s>', status: 'substitute S₄ → solve S₂', done: true },
       { text: 'p₂: S₄',              status: '✓ solved', done: true }
     ],
     note: 'Substitute known S₄ into p₁ → S₂ decoded' },
 
-  { name: 'p₃', switches: [1, 1, 0, 1, 0], digest: 'S₁ ⊕ S₂ ⊕ S₄', known: '{ S₁, S₂, S₄ }',
+  { name: 'p₃', switches: [1, 1, 0, 1, 0], digest: 'S₁ ⊕ S₂ ⊕ S₄', known: '{ S1, S2, S4 }',
     eqs: [
       { text: 'p₁: S₂',                          status: '✓ solved', done: true },
       { text: 'p₂: S₄',                          status: '✓ solved', done: true },
@@ -28,7 +28,7 @@ const PACKETS = [
     ],
     note: 'Substitute known S₂, S₄ → S₁ decoded' },
 
-  { name: 'p₄ + p₅ (summary)', switches: [0, 0, 1, 0, 1], digest: 'S₃ ⊕ S₅, S₅', known: '{ S₁, S₂, S₃, S₄, S₅ }',
+  { name: 'p₄ + p₅ (summary)', switches: [0, 0, 1, 0, 1], digest: 'S₃ ⊕ S₅, S₅', known: '{ S1, S2, S3, S4, S5 }',
     eqs: [
       { text: 'p₄: S₃ ⊕ <s>S₅</s>', status: 'substitute → S₃ decoded', done: true },
       { text: 'p₅: S₅',              status: '→ S₅ decoded', done: true }
