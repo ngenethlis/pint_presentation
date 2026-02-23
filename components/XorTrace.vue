@@ -28,12 +28,25 @@ const PACKETS = [
     ],
     note: 'Substitute known S₂, S₄ → S₁ decoded' },
 
-  { name: 'p₄ + p₅ (summary)', switches: [0, 0, 1, 0, 1], digest: 'S₃ ⊕ S₅, S₅', known: '{ S1, S2, S3, S4, S5 }',
+  { name: 'p₄', switches: [0, 0, 1, 0, 1], digest: 'S₃ ⊕ S₅', known: '{ S1, S2, S4 }',
     eqs: [
-      { text: 'p₄: S₃ ⊕ <s>S₅</s>', status: 'substitute → S₃ decoded', done: true },
-      { text: 'p₅: S₅',              status: '→ S₅ decoded', done: true }
+      { text: 'p₄: S₃ ⊕ S₅', status: '2 unknowns — wait' }
     ],
-    note: '✓ All 5 switches recovered in ~5 packets' }
+    note: 'Two unknowns (S₃ ⊕ S₅) — need another equation' },
+
+  { name: 'p₅', switches: [0, 0, 0, 0, 1], digest: 'S₅', known: '{ S1, S2, S4, S5 }',
+    eqs: [
+      { text: 'p₄: S₃ ⊕ S₅', status: '2 unknowns' },
+      { text: 'p₅: S₅',       status: '1 unknown → solve!', done: true }
+    ],
+    note: 'One unknown → solve directly: S₅ decoded' },
+
+  { name: 'back-sub into p₄', switches: [0, 0, 1, 0, 0], digest: 'sub S₅ → S₃', known: '{ S1, S2, S3, S4, S5 }',
+    eqs: [
+      { text: 'p₄: S₃ ⊕ <s>S₅</s>', status: 'substitute S₅ → solve S₃', done: true },
+      { text: 'p₅: S₅',              status: '✓ solved', done: true }
+    ],
+    note: '✓ All 5 switches recovered in 5 packets' }
 ]
 
 const step   = ref(-1)

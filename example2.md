@@ -22,7 +22,7 @@ Key idea: spread switch IDs across many packets using __distributed encoding__
 
 ## Technique 1: Baseline (Coupon Collector)
 
-Each switch writes its ID independently with $\Pr = \frac{1}{k}$ — a new packet reveals a previously-unseen switch with some probability
+$k$ = number of switches on the path. Each switch writes its ID independently with $\Pr = \frac{1}{k}$ — a new packet reveals a previously-unseen switch with some probability
 
 <v-click>
 
