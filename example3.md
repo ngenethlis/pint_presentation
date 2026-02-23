@@ -66,4 +66,4 @@ PINT uses __P4-compatible sketches__ at the end-host to aggregate samples
 
 Path: $S_1 \to S_2 \to S_3 \to S_4 \to S_5$ with latencies 2ms, 8ms, 3ms, 1ms, 12ms
 
-<LatencyTrace />
+<P99Trace />
