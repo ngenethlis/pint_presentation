@@ -30,8 +30,6 @@ __Why $k \ln k$?__ After collecting $j$ of $k$ IDs, any packet reveals a new one
 
 $$\mathbb{E}[\text{total packets}] = \sum_{j=0}^{k-1} \frac{k}{k-j} = k \sum_{i=1}^{k} \frac{1}{i} = k H_k \approx k \ln k$$
 
-($H_k = 1 + \tfrac{1}{2} + \cdots + \tfrac{1}{k}$ is the $k$-th harmonic number; $H_k \approx \ln k$ by the integral test)
-
 </v-click>
 
 <v-click>
@@ -70,8 +68,6 @@ Each packet defines a __linear equation over $\mathbb{F}_2$__:
 
 $$\bigoplus_{\{i\,:\,g(p_j,i) < \tfrac{1}{d}\}} s_i \;=\; \text{digest}(p_j)$$
 
-($\mathbb{F}_2 = \{0,1\}$ — addition is XOR: $1 \oplus 1 = 0$, $1 \oplus 0 = 1$; arithmetic never overflows a single bit)
-
 The receiver uses the same hash $g$ to reconstruct which switches participated
 
 </v-click>
@@ -102,13 +98,11 @@ Complexity: $O(k \log k)$ packets
 layout: default
 ---
 
-## Hybrid Approach
+## Hybrid Approach Worked Example with ($k = 5$, $\mathcal{L}=2$)
 
-Pure XOR: efficient but complex &nbsp;|&nbsp; Pure Baseline: simple but slow
+Pure Baseline: simple but slow | Pure XOR: efficient but complex 
 
-
-__Worked Example__ with ($k = 5$, $\mathcal{L}=2$)
-
+__Interleave protocols__
 Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR ($1 - \tau = 1/4$)
 
 
@@ -132,8 +126,15 @@ Baseline finds most hops fast, XOR layers __clean up the stragglers__
 
 <v-click>
 
-$\log^* k$ is the __iterated logarithm__ — how many times you apply $\log_2$ before reaching $\leq 1$.
-$\log^*(2^{65536}) = 5$ — so $k \log \log^* k$ is __essentially linear__ in $k$
+$\log^* k$ is the __iterated logarithm__: keep applying $\log_2$ until the value drops to $\leq 1$; count the steps.
+
+$$\log^*(k) = \begin{cases} 0 & k \leq 1 \\ 1 + \log^*(\log_2 k) & k > 1 \end{cases}$$
+
+Example — $k = 2^{65536}$:
+
+$$2^{65536} \;\xrightarrow{\log_2}\; 65536 \;\xrightarrow{\log_2}\; 16 \;\xrightarrow{\log_2}\; 4 \;\xrightarrow{\log_2}\; 2 \;\xrightarrow{\log_2}\; 1 \;\leq 1 \;\checkmark$$
+
+Five steps, so $\log^*(2^{65536}) = 5$. For any number that fits in the observable universe, $\log^* \leq 5$ — so $k \log \log^* k$ is __essentially linear__ in $k$.
 
 </v-click>
 
