@@ -6,6 +6,14 @@ This is a __static per-flow__ aggregation: switch IDs don't change between packe
 
 <v-click>
 
+__Why useful?__ Traffic takes specific paths but operators rarely know which. Path tracing enables:
+- **Fault localization**: which switch is causing packet loss or high latency?
+- **Routing verification**: is traffic following expected paths through the network?
+
+</v-click>
+
+<v-click>
+
 Key idea: spread switch IDs across many packets using __distributed encoding__
 
 </v-click>
@@ -30,22 +38,7 @@ Problem: first IDs come quickly, last ones take many more packets ("long tail")
 
 Path: $S_1 \rightarrow S_2 \rightarrow S_3 \rightarrow S_4 \rightarrow S_5$, each writes with $\Pr = 1/5$
 
-<v-clicks>
-
-- $p_1$ carries $S_3$ &nbsp;&nbsp;→&nbsp;&nbsp; known: {$S_3$}
-- $p_2$ carries $S_1$ &nbsp;&nbsp;→&nbsp;&nbsp; known: {$S_1, S_3$}
-- $p_3$ carries $S_3$ &nbsp;&nbsp;→&nbsp;&nbsp; known: {$S_1, S_3$} &nbsp; ← duplicate!
-- $p_4$ carries $S_1$ &nbsp;&nbsp;→&nbsp;&nbsp; known: {$S_1, S_3$} &nbsp; ← duplicate again!
-- $p_8$ carries $S_5$ &nbsp;&nbsp;→&nbsp;&nbsp; known: {$S_1, S_2, S_3, S_5$}
-- $p_{12}$ carries $S_4$ → known: {$S_1, S_2, S_3, S_4, S_5$} &nbsp; ✓ done!
-
-</v-clicks>
-
-<v-click>
-
-For $k=25$: __median 89 packets__, 99th percentile 189 packets
-
-</v-click>
+<BaselineTrace />
 
 ---
 
@@ -69,17 +62,8 @@ If exactly __one__ unknown block was XOR'd, we can recover it, then back-substit
 
 ### XOR: Worked Example ($k = 5$)
 
-Path: $S_1 \rightarrow S_2 \rightarrow S_3 \rightarrow S_4 \rightarrow S_5$, each XORs with $\Pr = 1/5$
 
-<v-clicks>
-
-- $p_1$: digest = $S_2 \oplus S_4$ &nbsp;&nbsp;→&nbsp;&nbsp; 2 unknowns, can't decode yet
-- $p_2$: digest = $S_4$ &nbsp;&nbsp;→&nbsp;&nbsp; 1 unknown → __decode $S_4$__ ✓
-- Back-sub $p_1$: $S_2 \oplus \cancel{S_4}$ → __decode $S_2$__ ✓
-- $p_3$: digest = $S_1 \oplus S_2 \oplus S_4$ → know $S_2, S_4$ → __decode $S_1$__ ✓
-- Continue until all 5 switches recovered
-
-</v-clicks>
+<XorTrace />
 
 <v-click>
 
@@ -115,22 +99,8 @@ __Solution: Interleave both schemes across layers__
 
 Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR ($1 - \tau = 1/4$)
 
-<v-clicks>
 
-- $p_1$ [Baseline]: $S_2$ → known: {$S_2$}
-- $p_2$ [Baseline]: $S_5$ → known: {$S_2, S_5$}
-- $p_3$ [Baseline]: $S_1$ → known: {$S_1, S_2, S_5$}
-- $p_4$ [XOR]: $S_3 \oplus S_4$ → 2 unknowns, wait...
-- $p_5$ [Baseline]: $S_2$ → duplicate
-- $p_6$ [XOR]: $S_4$ → 1 unknown → __decode $S_4$__ ✓, back-sub $p_4$ → __decode $S_3$__ ✓
-
-</v-clicks>
-
-<v-click>
-
-__All 5 switches in 6 packets!__
-
-</v-click>
+<HybridTrace />
 
 ---
 
@@ -145,6 +115,13 @@ __All 5 switches in 6 packets!__
 <v-click>
 
 Baseline finds most hops fast, XOR layers __clean up the stragglers__
+
+</v-click>
+
+<v-click>
+
+$\log^* k$ is the __iterated logarithm__ — how many times you apply $\log_2$ before reaching $\leq 1$.
+$\log^*(2^{65536}) = 5$ — so $k \log \log^* k$ is __essentially linear__ in $k$
 
 </v-click>
 

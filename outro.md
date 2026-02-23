@@ -1,11 +1,9 @@
 # Evaluation
 
----
-## Does it work?
+<v-clicks>
 
 #### Congestion Control (HPCC)
 
-<v-clicks>
 
 - Similar FCT to full-overhead INT, better goodput for long flows
 - Works well even when only $p = 1/16$ of packets carry the query digest
@@ -13,9 +11,11 @@
 
 </v-clicks>
 
-#### Path Tracing
 
 <v-clicks>
+
+#### Path Tracing
+
 
 - Kentucky Datalink ($D=59$): only __42 packets__ avg to trace full path
 - Competing methods (PPM, AMS) need __1000-5000+ packets__
@@ -56,7 +56,6 @@ Each packet carries digests for 2 of the 3 concurrent queries
 1. __Practical__: implemented in P4, runs on commodity programmable switches
 2. __Flexible__: user defines bit budget per use case
 3. __Composable__: multiple queries run concurrently within budget
-4. __Connects to theory__: distributed coding, coupon collector, sketches
 
 </v-clicks>
 

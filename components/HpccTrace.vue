@@ -1,17 +1,27 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, onUnmounted } from 'vue'
 
-// Reservoir sampling: switch i writes if g(pkt, i) < 1/i
+// HPCC Bottleneck tracking: c = floor(log_1.05(v))
 const STEPS = [
-  { id: 'S₁', hash: 0.08, threshold: 1.00 },  // always writes (1/1)
-  { id: 'S₂', hash: 0.67, threshold: 0.50 },  // skips   (1/2)
-  { id: 'S₃', hash: 0.19, threshold: 0.33 },  // writes  (1/3)
-  { id: 'S₄', hash: 0.44, threshold: 0.25 },  // skips   (1/4)
+  { id: 'S₁', util: 30000, encoded: 211 }, // 1.05^211 ≈ 29646
+  { id: 'S₂', util: 75000, encoded: 230 }, // 1.05^230 ≈ 74737 (bottleneck)
+  { id: 'S₃', util: 10000, encoded: 188 }, // 1.05^188 ≈ 9668
+  { id: 'S₄', util: 50000, encoded: 221 }, // 1.05^221 ≈ 48296
 ]
-const writes = STEPS.map(s => s.hash < s.threshold)
 
-const step        = ref(-1)   // -1=not started  0-3=at switch  4=at sink
-const hasLaunched = ref(false) // once launched, packet stays on screen (even on Back)
+// Determine dynamically which switches will write (update the max)
+const writes: boolean[] = []
+let currentMax = 0
+for (let i = 0; i < STEPS.length; i++) {
+  if (STEPS[i].encoded > currentMax) {
+    writes.push(true)
+    currentMax = STEPS[i].encoded
+  } else {
+    writes.push(false)
+  }
+}
+
+const step = ref(-1)   // -1=not started  0-3=at switch  4=at sink
 
 // ── Measure switch pixel positions after mount ──────────────────
 const netEl   = ref<HTMLElement | null>(null)
@@ -39,7 +49,7 @@ function measure() {
 
 // ── Keyboard Navigation ──────────────────────────────────────────
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' || e.key === 'ArrowRight') {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') {
     if (step.value < STEPS.length) {
       advance()
       e.preventDefault()
@@ -65,22 +75,34 @@ onUnmounted(() => {
 
 // ── Packet position ──────────────────────────────────────────────
 const pktLeft = computed(() => {
-  if (step.value < 0) return hasLaunched.value ? `${swPx.value[0] ?? 0}px` : '-140px'
-  if (step.value >= STEPS.length) return `${sinkPx.value}px`
+  if (step.value < 0)                  return '-140px'
+  if (step.value >= STEPS.length)      return `${sinkPx.value}px`
   return `${swPx.value[step.value] ?? 0}px`
 })
 
-// ── Digest content ───────────────────────────────────────────────
+// ── Digest (Max Encoded Value) ───────────────────────────────────
 const digest = computed(() => {
-  if (step.value < 0) return '∅'
-  let d = '∅'
+  if (step.value < 0) return 0
+  let d = 0
   for (let i = 0; i <= Math.min(step.value, STEPS.length - 1); i++) {
-    if (writes[i]) d = STEPS[i].id
+    if (STEPS[i].encoded > d) d = STEPS[i].encoded
   }
   return d
 })
 
-// Flash the digest field green ONLY when stepping forward onto a write
+function prevDigest(currentStep: number) {
+  let d = 0
+  for (let i = 0; i < currentStep; i++) {
+    if (STEPS[i].encoded > d) d = STEPS[i].encoded
+  }
+  return d
+}
+
+const decodedValue = computed(() => {
+  return Math.round(Math.pow(1.05, digest.value)).toLocaleString()
+})
+
+// Flash the digest field green ONLY on forward write
 const digestFlash = ref(false)
 watch(step, (newVal, oldVal) => {
   if (newVal > oldVal && newVal >= 0 && newVal < STEPS.length && writes[newVal]) {
@@ -90,12 +112,12 @@ watch(step, (newVal, oldVal) => {
 })
 
 // ── Controls ─────────────────────────────────────────────────────
-function advance() { if (step.value < STEPS.length) { if (step.value === -1) hasLaunched.value = true; step.value++ } }
+function advance() { if (step.value < STEPS.length) step.value++ }
 function back()    { if (step.value > -1) step.value-- }
-function reset()   { step.value = -1; hasLaunched.value = false }
+function reset()   { step.value = -1 }
 
 const btnLabel = computed(() => {
-  if (step.value < 0)               return '▶  Launch packet'
+  if (step.value < 0)               return '▶  Launch'
   if (step.value < STEPS.length - 1) return `Next: ${STEPS[step.value + 1].id}  →`
   if (step.value === STEPS.length - 1) return 'Deliver  →'
   return '✓  Delivered'
@@ -117,10 +139,10 @@ const swState = (i: number) => {
       <div
         ref="pktEl"
         class="packet"
-        :class="{ visible: step >= 0 || hasLaunched }"
+        :class="{ visible: step >= 0 }"
         :style="{ left: pktLeft }"
       >
-        <span class="plabel">pkt_42</span>
+        <span class="plabel">INT_HDR</span>
         <span class="dig" :class="{ flash: digestFlash }">{{ digest }}</span>
       </div>
 
@@ -132,7 +154,10 @@ const swState = (i: number) => {
           class="sw"
           :ref="(el) => { if (el) swEls[i] = el as HTMLElement }"
           :class="swState(i)"
-        >{{ sw.id }}</div>
+        >
+          <span class="sw-id">{{ sw.id }}</span>
+          <span class="sw-util">{{ sw.util / 1000 }}k</span>
+        </div>
         <div class="wire" :class="{ lit: step > i }"></div>
       </template>
 
@@ -146,9 +171,9 @@ const swState = (i: number) => {
         <div class="bslot">
           <Transition name="pop">
             <div v-if="step === i" class="bubble" :class="writes[i] ? 'bwrite' : 'bskip'">
-              <div class="bline">g(pkt_42,&nbsp;{{ i + 1 }}) = <b>{{ sw.hash }}</b></div>
-              <div class="bline thresh">threshold = 1/{{ i + 1 }} = {{ sw.threshold.toFixed(2) }}</div>
-              <div class="bdecision">{{ writes[i] ? '✓ WRITE' : '✗ SKIP' }}</div>
+              <div class="bline">v = <b>{{ sw.util.toLocaleString() }}</b></div>
+              <div class="bline thresh">c = &lfloor;log<sub>1.05</sub>(v)&rfloor; = <b>{{ sw.encoded }}</b></div>
+              <div class="bdecision">{{ writes[i] ? '✓ NEW MAX' : '✗ LOWER (SKIP)' }}</div>
             </div>
           </Transition>
         </div>
@@ -158,26 +183,25 @@ const swState = (i: number) => {
     </div>
 
     <div class="status">
-      <span v-if="step < 0" class="s-idle"></span>
-      
+      <span v-if="step < 0"                class="s-idle">Press <b>Right Arrow</b> or Click ▶ to trace the bottleneck</span>
       <span v-else-if="step < STEPS.length" :class="writes[step] ? 's-write' : 's-skip'">
-        <b>{{ STEPS[step].id }}</b>:
-        g&nbsp;=&nbsp;{{ STEPS[step].hash }}
-        {{ writes[step] ? '&lt;' : '≥' }}
-        {{ STEPS[step].threshold.toFixed(2) }}
+        <b>{{ STEPS[step].id }}</b> compares 8-bit encoded util:
+        c = {{ STEPS[step].encoded }}
+        {{ writes[step] ? '&gt;' : '&le;' }}
+        {{ prevDigest(step) }} (current pkt max)
         &nbsp;→&nbsp;
         {{ writes[step]
-            ? `writes ${STEPS[step].id} into digest`
-            : `skips — digest stays ${digest}` }}
+            ? `Updates packet digest to ${STEPS[step].encoded}`
+            : `Skips — digest remains ${digest}` }}
       </span>
       <span v-else class="s-done">
-        Delivered &nbsp;·&nbsp; digest = <b>{{ digest }}</b>
-        &nbsp;·&nbsp; receiver learns switch <b>{{ digest }}</b> is on this path
+        Delivered &nbsp;·&nbsp; bottleneck digest = <b>{{ digest }}</b> (1 byte)
+        &nbsp;·&nbsp; Receiver decodes: 1.05<sup>{{ digest }}</sup> &approx; <b>{{ decodedValue }} Mbps</b>
       </span>
     </div>
 
     <div class="ctrl">
-      <button class="btn-back" :disabled="step <= -1" @click="back">← Back</button>
+      <button class="btn-back"  :disabled="step <= -1" @click="back">← Back</button>
       <button class="btn-reset" :disabled="step < 0" @click="reset">↺ Reset</button>
       <button class="btn-next"  :disabled="step >= STEPS.length" @click="advance">{{ btnLabel }}</button>
     </div>
@@ -274,26 +298,31 @@ const swState = (i: number) => {
 
 /* Switch boxes */
 .sw {
-  width: 54px;
-  height: 54px;
+  width: 56px;
+  height: 56px;
   border-radius: 9px;
   border: 2px solid #555;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
+  gap: 2px;
   flex-shrink: 0;
   background: #1a1a2e;
   color: #666;
   transition: all 0.3s;
 }
+.sw-id { font-size: 13px; font-weight: 700; line-height: 1; }
+.sw-util { font-size: 10px; font-weight: 400; opacity: 0.7; line-height: 1; }
+
 .sw.active  {
   border-color: #60a5fa;
   background: #1e3a5f;
   color: #93c5fd;
   box-shadow: 0 0 16px rgba(96,165,250,0.45);
 }
+.sw.active .sw-util { opacity: 0.9; color: #bfdbfe; }
+
 .sw.wrote   { border-color: #4ade80; background: #14532d; color: #86efac; }
 .sw.skipped { border-color: #2d3748; color: #4a5568; }
 
@@ -306,7 +335,7 @@ const swState = (i: number) => {
 }
 
 .bslot {
-  width: 54px;
+  width: 56px;
   flex-shrink: 0;
   position: relative;
   display: flex;
@@ -374,7 +403,9 @@ button:disabled { opacity: 0.3; cursor: not-allowed; }
   border-color: #374151;
   color: #6b7280;
 }
-.btn-back:hover:not(:disabled), .btn-reset:hover:not(:disabled) { background: #252540; border-color: #555; color: #aaa; }
+.btn-back:hover:not(:disabled), .btn-reset:hover:not(:disabled) { 
+  background: #252540; border-color: #555; color: #aaa; 
+}
 
 .btn-next {
   background: #2d1b4e;

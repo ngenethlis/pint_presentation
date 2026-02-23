@@ -16,11 +16,19 @@ __PINT approach__:
 
 </v-click>
 
+<v-click>
+
+__What the receiver does with it__: sends the 8-bit bottleneck digest back to the sender, which computes a new rate:
+$$\text{rate} \leftarrow \text{BW} \times (1 - U_\text{max})$$
+Same accuracy as reading all per-hop values — using __1 byte__ instead of 25+
+
+</v-click>
+
 ---
 
-# Compression via Multiplicative Approximation
+## Compression via Multiplicative Approximation
 
-How to fit a 32-bit utilization value into 8 bits?
+We can only use 8 bits, how to encode a 32-bit value?
 
 <v-click>
 
@@ -77,3 +85,6 @@ $$\text{error} = \frac{75{,}000 - 74{,}737}{75{,}000} \approx 0.35\% \ll 5\% \ch
 **Savings**: 4 bytes → 1 byte per hop in the packet header
 
 </v-click>
+
+---
+<HpccTrace />

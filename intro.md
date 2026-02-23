@@ -13,6 +13,7 @@ Collect & analyze measurements to understand what is happening in the network fo
 
 
 ---
+
 # In-Band Network Telemetry
 
 Switches add metadata
@@ -65,6 +66,18 @@ __Probabilistic Encoding__
 - Visibility comparable to full INT, fraction of the cost
 
 </v-clicks>
+
+<v-click>
+
+__What can 1 bit do?__ Encode a binary threshold signal — _"is link utilization above 80%?"_ — or contribute to probabilistic path tracing with very low sample probability
+
+</v-click>
+
+<v-click>
+
+Implemented in __P4__ — a language for programming the data plane of network switches at hardware speed (line rate, no CPU). PINT runs entirely _inside_ the switch, adding zero software overhead.
+
+</v-click>
 
 
 ---
