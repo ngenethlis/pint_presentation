@@ -36,6 +36,8 @@ $$\mathbb{E}[\text{total packets}] = \sum_{j=0}^{k-1} \frac{k}{k-j} = k \sum_{i=
 
 __Tail bound__: after $t$ packets, $\Pr[\text{switch } i \text{ not yet seen}] = \left(1-\tfrac{1}{k}\right)^t \leq e^{-t/k}$
 
+_(Chernoff: use $1-x \leq e^{-x}$, applied to each Bernoulli trial independently)_
+
 Union bound over all $k$ switches: $\;\Pr[\text{any switch missing}] \leq k \cdot e^{-t/k}$
 
 Set $t = c\, k \ln k$: $\;\Pr[\text{any missing}] \leq k \cdot k^{-c} = k^{1-c} \to 0$ for any constant $c > 1$
@@ -118,23 +120,13 @@ Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR ($1 - \tau = 1/4$)
 | 99th pct packets | 189 | ~150 | __68__ |
 | Complexity | $k \ln k$ | $O(k \log k)$ | $k \log \log^* k$ |
 
-<v-click>
-
 Baseline finds most hops fast, XOR layers __clean up the stragglers__
 
-</v-click>
-
 <v-click>
 
-$\log^* k$ is the __iterated logarithm__: keep applying $\log_2$ until the value drops to $\leq 1$; count the steps.
+$\log^* k$ is the iterated logarithm: the number of $\log_2$ applications required until the value drops to $\leq 1$.
 
 $$\log^*(k) = \begin{cases} 0 & k \leq 1 \\ 1 + \log^*(\log_2 k) & k > 1 \end{cases}$$
-
-Example — $k = 2^{65536}$:
-
-$$2^{65536} \;\xrightarrow{\log_2}\; 65536 \;\xrightarrow{\log_2}\; 16 \;\xrightarrow{\log_2}\; 4 \;\xrightarrow{\log_2}\; 2 \;\xrightarrow{\log_2}\; 1 \;\leq 1 \;\checkmark$$
-
-Five steps, so $\log^*(2^{65536}) = 5$. For any number that fits in the observable universe, $\log^* \leq 5$ — so $k \log \log^* k$ is __essentially linear__ in $k$.
 
 </v-click>
 
@@ -155,8 +147,8 @@ For Kentucky Datalink ($D = 59$): PINT needs only __42 packets__ on average
 <v-click>
 
 __Proof sketch__:
-- **Layer 0** (Baseline, $\tau \approx 3/4$): each switch appears with prob $\tau$ per packet. After $O(k)$ packets, a constant fraction remain. Those that haven't appeared form the "straggler" set.
-- **Layer 1** (XOR): collects equations over the stragglers. When $m$ unknowns remain, the XOR system becomes solvable after $O(m \log m)$ new packets — each equation is a useful pivot with constant probability.
+- __Baseline__, $\tau \approx 3/4$: each switch appears with prob $\tau$ per packet. After $O(k)$ packets, a constant fraction remain _(Chernoff: expected stragglers $(1-\tau)^{O(k)} \cdot k$ concentrates tightly)_. Those that haven't appeared form the "straggler" set.
+- __XOR__: collects equations over the stragglers. When $m$ unknowns remain, the XOR system becomes solvable after $O(m \log m)$ new packets.
 - With $\mathcal{L}$ XOR layers: unknowns shrink by a $\log$ factor each layer, giving $O(k \log^{(\mathcal{L})} k)$ total packets.
 
 </v-click>

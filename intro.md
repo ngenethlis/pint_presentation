@@ -32,6 +32,7 @@ Overhead grows __linearly__ with hop count
 </v-click>
 
 <v-click>
+@claude Make this into a table 
 
 5 hops, 3 INT values per hop $\rightarrow$ 48B overhead (4.8% of 1KB packet)
 
@@ -69,16 +70,57 @@ __Probabilistic Encoding__
 
 <v-click>
 
-__What can 1 bit do?__ Encode a binary threshold signal — _"is link utilization above 80%?"_ — or contribute to probabilistic path tracing with very low sample probability
+__What can 1 bit do?__ Encode a binary threshold signal 
+- _"is link utilization above 80%?"_ 
+- contribute to probabilistic path tracing with very low sample probability
 
 </v-click>
 
 <v-click>
 
-Implemented in __P4__ — a language for programming the data plane of network switches at hardware speed (line rate, no CPU). PINT runs entirely _inside_ the switch, adding zero software overhead.
+Implemented in __P4__ a programming language for network switches running at hardware speed (no CPU).
+- PINT runs entirely _inside_ the switch, adding zero software overhead.
 
 </v-click>
 
+
+---
+
+# PINT Architecture
+
+<v-click>
+
+__Data plane__ — inside every switch, zero extra state:
+
+```
+packet arrives → evaluate g(pkt_id, switch_id)
+                        ↓
+               hash < threshold?
+               yes → write value into digest field
+               no  → pass digest unchanged
+```
+
+</v-click>
+
+<v-click>
+
+__Packet header__ — a fixed digest field (8–16 bits) accumulates information hop-by-hop
+
+</v-click>
+
+<v-click>
+
+__End-host__ — receiver collects digests over many packets and runs decoding:
+- Gaussian elimination for path recovery
+- Quantile sketch updates for latency estimation
+
+</v-click>
+
+<v-click>
+
+__Query engine__ — operator specifies the query type and bit budget; compiles to P4 and deploys to switches. Switches need __no per-flow state__ and __no coordination__ with each other.
+
+</v-click>
 
 ---
 
@@ -94,7 +136,7 @@ __Global hashing!__
 
 <v-click>
 
-All switches know a hash function $g(\text{packet\_ID})$
+All switches know a hash function `g(packet_ID, switch_ID)`
 
 Independently decide whether to write and what to write based on hash output
 
