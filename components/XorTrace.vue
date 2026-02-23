@@ -36,13 +36,21 @@ const PACKETS = [
     note: '✓ All 5 switches recovered' }
 ]
 
-const step = ref(-1)
+const step   = ref(-1)
+const rootEl = ref<HTMLElement | null>(null)
+
+function isSlideActive(): boolean {
+  if (!rootEl.value) return false
+  const rect = rootEl.value.getBoundingClientRect()
+  return rect.width > 0 && rect.right > 0 && rect.left < window.innerWidth
+}
 
 function handleKeydown(e: KeyboardEvent) {
+  if (!isSlideActive()) return
   if (e.key === 'ArrowRight' || e.key === 'Enter') {
-    if (step.value < PACKETS.length - 1) { advance(); e.preventDefault(); e.stopPropagation(); }
+    if (step.value < PACKETS.length - 1) { advance(); e.preventDefault(); e.stopImmediatePropagation(); }
   } else if (e.key === 'ArrowLeft') {
-    if (step.value > -1) { back(); e.preventDefault(); e.stopPropagation(); }
+    if (step.value > -1) { back(); e.preventDefault(); e.stopImmediatePropagation(); }
   }
 }
 
@@ -57,7 +65,7 @@ const current = computed(() => step.value >= 0 ? PACKETS[step.value] : null)
 </script>
 
 <template>
-  <div class="trace">
+  <div class="trace" ref="rootEl">
     <div class="net">
       <div class="src-node">SRC</div>
       <div class="wire"></div>

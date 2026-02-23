@@ -118,6 +118,6 @@ Three aggregation modes:
 
 # Global Hashing in Action
 
-Baseline path tracing: switch $i$ writes if $g(\text{pkt}, i) < \tfrac{1}{i}$ (reservoir sampling)
+Per-flow sampling: switch at hop $i$ writes if $g(\text{pkt}, i) < \tfrac{1}{i}$ — later hops less likely to overwrite
 
 <PacketTrace />
