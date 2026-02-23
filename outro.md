@@ -35,30 +35,6 @@
 
 ---
 
-## Combined Experiment
-
-<v-click>
-
-Run all 3 queries concurrently with 16-bit global budget (8 bits per query)
-
-</v-click>
-
-<v-clicks>
-
-- HPCC: short flows 6.6% slower, long flows unaffected
-- Path tracing: packet count increases only 0.5% vs running alone
-- Latency estimation: relative error increases only 0.7%
-
-</v-clicks>
-
-<v-click>
-
-Each packet carries digests for 2 of the 3 concurrent queries
-
-</v-click>
-
----
-
 # The Good
 
 <v-clicks>
@@ -76,10 +52,12 @@ Each packet carries digests for 2 of the 3 concurrent queries
 
 <v-clicks>
 
-1. __Short flows__: path tracing needs many packets, single-packet flows (common in datacenters) cannot be traced
+1. __Short flows__: path tracing needs many packets, single-packet flows (common in datacenters) cannot be traced.
 2. __Probabilistic nature__: never get perfect data for a single specific packet, need aggregation over flow
-3. __Route changes__: if the route changes mid-flow, XOR equations from the two paths reference different switch sets — the system becomes inconsistent and decoding fails. Requires __flowlet-level tracking__: treat each consecutive burst on the same route as a separate sub-flow and reset the equation system on route change
-4. __Manual execution plan__: query engine currently requires manual configuration of bit budget allocation
+3. __Route changes__: if the route changes mid-flow, XOR equations from the two paths reference different switch sets, the system becomes inconsistent and decoding fails.
+<!-- (Requires __flowlet-level tracking__: treat each consecutive burst on the same route as a separate sub-flow and reset the equation system on route change) -->
+4. __Manual execution plan__: query engine currently requires manual configuration of bit budget allocation.
+5. __Security applications__: volume-based DDoS (SYN floods, amplification) could be detectable via flow-level aggregates — but low-rate or evasive attacks depend on spotting individual malicious packets, which probabilistic sampling misses by design.
 
 </v-clicks>
 
@@ -108,6 +86,8 @@ PINT assumes we __must__ sacrifice accuracy for performance, but other architect
 </v-click>
 
 
+[OmniMon SIGCOMM'20](https://dl.acm.org/doi/abs/10.1145/3387514.3405877)
+
 ---
 
 
@@ -121,12 +101,6 @@ PINT assumes we __must__ sacrifice accuracy for performance, but other architect
 - 16 bits per packet $\rightarrow$ 3 concurrent queries with near-full-INT visibility
 
 </v-clicks>
-
-<v-click>
-
-Can we apply this to __security__ (DDoS detection) where single-packet precision is critical?
-
-</v-click>
 
 ---
 layout : end
