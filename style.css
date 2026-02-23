@@ -1,0 +1,19 @@
+/* Slow down v-click reveal animations */
+.slidev-vclick-target {
+  transition: opacity 500ms ease !important;
+}
+
+/* Slow down slide transitions */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-up-enter-active,
+.slide-up-leave-active,
+.fade-out-enter-active,
+.fade-out-leave-active {
+  transition-duration: 600ms !important;
+}
+
+/* Prevent previous slide's heading from bleeding through during transitions */
+.slidev-page {
+  overflow: hidden !important;
+}

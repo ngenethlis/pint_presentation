@@ -23,6 +23,16 @@
 
 </v-clicks>
 
+<v-clicks>
+
+#### Tail / Median Latency Estimation
+
+- P50 and P99 relative error stays __within configured $\varepsilon$__ using KLL sketch
+- Sliding-window sketch (W = 400) stabilises within one window length
+- Tested on CAIDA traces: both median and tail accurately recovered with __8-bit budget__
+
+</v-clicks>
+
 ---
 
 ## Combined Experiment

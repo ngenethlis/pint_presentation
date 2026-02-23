@@ -18,6 +18,8 @@ transition: slide-left
 mdc: true
 # duration of the presentation
 duration: 20min
+hideInToc: true
+
 ---
 # Probabilistic In-Band Network Telemetry
 
@@ -35,6 +37,7 @@ Nikolaos Genethlis
 
 ---
 layout: two-cols
+hideInToc: true
 ---
 
 # Agenda
@@ -65,5 +68,5 @@ transition: slide-left
 
 ---
 src: ./outro.md
-transition: zoom-out
+transition: slide-left
 ---
