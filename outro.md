@@ -68,7 +68,7 @@ Each packet carries digests for 2 of the 3 concurrent queries
 
 1. __Short flows__: path tracing needs many packets, single-packet flows (common in datacenters) cannot be traced
 2. __Probabilistic nature__: never get perfect data for a single specific packet, need aggregation over flow
-3. __Route changes__: if route changes mid-flow, decoding becomes complex (flowlet-level tracking needed)
+3. __Route changes__: if the route changes mid-flow, XOR equations from the two paths reference different switch sets — the system becomes inconsistent and decoding fails. Requires __flowlet-level tracking__: treat each consecutive burst on the same route as a separate sub-flow and reset the equation system on route change
 4. __Manual execution plan__: query engine currently requires manual configuration of bit budget allocation
 
 </v-clicks>

@@ -22,13 +22,29 @@ Key idea: spread switch IDs across many packets using __distributed encoding__
 
 ## Technique 1: Baseline (Coupon Collector)
 
-Each switch writes its ID with $\Pr = \frac{1}{k}$ (reservoir sampling)
+Each switch writes its ID independently with $\Pr = \frac{1}{k}$ — a new packet reveals a previously-unseen switch with some probability
 
 <v-click>
 
-Simple but slow: need $k \ln k$ packets on average to collect all $k$ switch IDs
+__Why $k \ln k$?__ After collecting $j$ of $k$ IDs, any packet reveals a new one with probability $\frac{k-j}{k}$
 
-Problem: first IDs come quickly, last ones take many more packets ("long tail")
+$$\mathbb{E}[\text{total packets}] = \sum_{j=0}^{k-1} \frac{k}{k-j} = k \sum_{i=1}^{k} \frac{1}{i} = k H_k \approx k \ln k$$
+
+</v-click>
+
+<v-click>
+
+__Tail bound__: after $t$ packets, $\Pr[\text{switch } i \text{ not yet seen}] = \left(1-\tfrac{1}{k}\right)^t \leq e^{-t/k}$
+
+Union bound over all $k$ switches: $\;\Pr[\text{any switch missing}] \leq k \cdot e^{-t/k}$
+
+Set $t = c\, k \ln k$: $\;\Pr[\text{any missing}] \leq k \cdot k^{-c} = k^{1-c} \to 0$ for any constant $c > 1$
+
+</v-click>
+
+<v-click>
+
+__Long tail__: the last few IDs dominate — the $k$-th ID alone takes $k$ packets in expectation
 
 </v-click>
 
@@ -48,13 +64,27 @@ Each switch XORs its ID onto the packet digest with $\Pr = p = 1/d$
 
 <v-click>
 
-Receiver computes $g(p_j, 1), \ldots, g(p_j, k)$ to determine which switches XOR'd
+Each packet defines a __linear equation over $\mathbb{F}_2$__:
+
+$$\bigoplus_{\{i\,:\,g(p_j,i) < \tfrac{1}{d}\}} s_i \;=\; \text{digest}(p_j)$$
+
+The receiver uses the same hash $g$ to reconstruct which switches participated
 
 </v-click>
 
 <v-click>
 
-If exactly __one__ unknown block was XOR'd, we can recover it, then back-substitute
+Decode by __Gaussian elimination over $\mathbb{F}_2$__:
+- Equation with **one unknown** $s_i$: directly solve, then back-substitute into all other equations containing $s_i$
+- This may reduce further equations to one-unknown — peel off iteratively
+
+</v-click>
+
+<v-click>
+
+__Advantage over Baseline__: equations share information across packets — knowing $S_3 \oplus S_4$ from one packet and $S_4$ from another gives $S_3$ for free; Baseline requires each switch to be written independently
+
+Complexity: $O(k \log k)$ packets
 
 </v-click>
 
@@ -62,14 +92,7 @@ If exactly __one__ unknown block was XOR'd, we can recover it, then back-substit
 
 ### XOR: Worked Example ($k = 5$)
 
-
 <XorTrace />
-
-<v-click>
-
-Efficient: $O(k \log k)$ packets, but decoding requires solving system of XOR equations
-
-</v-click>
 
 ---
 layout: default
@@ -130,5 +153,26 @@ $\log^*(2^{65536}) = 5$ — so $k \log \log^* k$ is __essentially linear__ in $k
 vs competing approaches (PPM, AMS): __25–36x fewer packets__
 
 For Kentucky Datalink ($D = 59$): PINT needs only __42 packets__ on average
+
+</v-click>
+
+---
+
+## Theorem 3 — Hybrid Complexity
+
+> After $k \log \log^* k \cdot (1 + o(1))$ packets, the multilayer scheme recovers all $k$ switch IDs with high probability.
+
+<v-click>
+
+__Proof sketch__:
+- **Layer 0** (Baseline, $\tau \approx 3/4$): each switch appears with prob $\tau$ per packet. After $O(k)$ packets, a constant fraction remain. Those that haven't appeared form the "straggler" set.
+- **Layer 1** (XOR): collects equations over the stragglers. When $m$ unknowns remain, the XOR system becomes solvable after $O(m \log m)$ new packets — each equation is a useful pivot with constant probability.
+- With $\mathcal{L}$ XOR layers: unknowns shrink by a $\log$ factor each layer, giving $O(k \log^{(\mathcal{L})} k)$ total packets.
+
+</v-click>
+
+<v-click>
+
+Set $\mathcal{L} = \log^* k$: the chain $k \to \log k \to \log \log k \to \cdots \to O(1)$ terminates in $\log^* k \leq 5$ steps for any real $k$, yielding the $k \log \log^* k$ bound. In practice $\mathcal{L} = 2$ already achieves near-linear performance.
 
 </v-click>

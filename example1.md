@@ -26,29 +26,37 @@ Same accuracy as reading all per-hop values — using __1 byte__ instead of 25+
 
 ---
 
-## Compression via Multiplicative Approximation
+## Why Multiplicative, Not Additive?
 
-We can only use 8 bits, how to encode a 32-bit value?
+We can only use 8 bits — how to encode a 32-bit utilization value?
 
 <v-click>
 
-__Logarithmic rounding__: store $c = \lfloor \log_{1+\varepsilon}\, v \rfloor$ instead of $v$
+__Additive__ error $|v - \hat{v}| \leq \varepsilon$: useless here — link speeds span __6 orders of magnitude__ (1 Mbps to 100 Gbps). A fixed $\varepsilon$ is either too coarse at high speeds or too tight at low speeds.
 
 </v-click>
 
 <v-click>
 
-With $\varepsilon = 0.05$: compress __32 bits $\rightarrow$ 8 bits__ with $< 5\%$ error
+__Multiplicative__ error: decoded $\hat{v} \in \bigl[\tfrac{v}{1+\varepsilon},\ v(1+\varepsilon)\bigr]$ — same __relative__ error at every scale
 
-Switches use __lookup tables__ to compute logs — no floating point needed
+Store $c = \lfloor \log_{1+\varepsilon} v \rfloor$, decode as $\hat{v} = (1+\varepsilon)^c$
 
 </v-click>
 
 <v-click>
 
-Result: similar or better HPCC performance, at a fraction of the overhead
+__Formal guarantee__: since $(1+\varepsilon)^c \leq v < (1+\varepsilon)^{c+1}$, we have $\hat{v} \leq v$ and:
 
-At 70% network load, PINT improves goodput by __71%__ vs full INT overhead
+$$\frac{|v - \hat{v}|}{v} = 1 - \frac{\hat{v}}{v} \leq 1 - \frac{1}{1+\varepsilon} = \frac{\varepsilon}{1+\varepsilon} < \varepsilon$$
+
+</v-click>
+
+<v-click>
+
+With $\varepsilon = 0.05$: __32 bits $\rightarrow$ 8 bits__ with $< 5\%$ relative error
+
+P4 switches have __no floating-point arithmetic__ — switches precompute $\lfloor \log_{1.05} v \rfloor$ into a __lookup table__ evaluated at line rate, no division or $\log$ at runtime
 
 </v-click>
 
