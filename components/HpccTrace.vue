@@ -102,6 +102,23 @@ const decodedValue = computed(() => {
   return Math.round(Math.pow(1.05, digest.value)).toLocaleString()
 })
 
+// True bottleneck: switch with highest encoded value
+const trueBottleneck = computed(() => {
+  return STEPS.reduce((max, sw) => sw.encoded > max.encoded ? sw : max)
+})
+
+// Multiplicative error on delivery
+const errorPct = computed(() => {
+  const decoded = Math.round(Math.pow(1.05, digest.value))
+  return (Math.abs(trueBottleneck.value.util - decoded) / trueBottleneck.value.util * 100).toFixed(2)
+})
+
+// Per-switch: decode error for each encoded value
+function swDecodeError(sw: typeof STEPS[0]) {
+  const decoded = Math.round(Math.pow(1.05, sw.encoded))
+  return (Math.abs(sw.util - decoded) / sw.util * 100).toFixed(2)
+}
+
 // Flash the digest field green ONLY on forward write
 const digestFlash = ref(false)
 watch(step, (newVal, oldVal) => {
@@ -173,6 +190,7 @@ const swState = (i: number) => {
             <div v-if="step === i" class="bubble" :class="writes[i] ? 'bwrite' : 'bskip'">
               <div class="bline">v = <b>{{ sw.util.toLocaleString() }}</b></div>
               <div class="bline thresh">c = &lfloor;log<sub>1.05</sub>(v)&rfloor; = <b>{{ sw.encoded }}</b></div>
+              <div class="bline thresh">decode: 1.05<sup>{{ sw.encoded }}</sup> &approx; {{ Math.round(Math.pow(1.05, sw.encoded)).toLocaleString() }} &nbsp;(err {{ swDecodeError(sw) }}%)</div>
               <div class="bdecision">{{ writes[i] ? '✓ NEW MAX' : '✗ LOWER (SKIP)' }}</div>
             </div>
           </Transition>
@@ -196,7 +214,9 @@ const swState = (i: number) => {
       </span>
       <span v-else class="s-done">
         Delivered &nbsp;·&nbsp; bottleneck digest = <b>{{ digest }}</b> (1 byte)
-        &nbsp;·&nbsp; Receiver decodes: 1.05<sup>{{ digest }}</sup> &approx; <b>{{ decodedValue }} Mbps</b>
+        &nbsp;·&nbsp; Decoded: 1.05<sup>{{ digest }}</sup> &approx; <b>{{ decodedValue }} Mbps</b>
+        &nbsp;·&nbsp; True: <b>{{ trueBottleneck.util.toLocaleString() }} Mbps</b>
+        &nbsp;·&nbsp; Error: <b>{{ errorPct }}%</b> &lt; 5% ✓
       </span>
     </div>
 
