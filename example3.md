@@ -1,24 +1,28 @@
 # Dynamic Per-flow Aggregation
 
-## Sketches & Latency
+Tracking metrics that change packet-by-packet
 
-Values change across packets (e.g. latency varies per packet per switch)
-
-Goal: estimate __median/tail latency__ across a flow without storing every value
+Unlike static switch IDs, metrics like **queueing latency** vary for every single packet. 
 
 <v-click>
 
-__Why useful?__ Tail latency drives SLA violations — a single slow switch causes pain for many flows. Knowing _which switch_ is the culprit enables targeted fixes.
-
-(__P99__ = 99th-percentile latency: 99% of packets arrive within this time; the other 1% are "the tail")
+**The Goal**: Estimate median and tail latency for an entire flow, without logging every hop of every packet.
 
 </v-click>
 
 <v-click>
 
-__How is this different from congestion control?__
-- CC: one max value _per packet_ (bottleneck), single hop
-- Tail latency: need a _distribution_ across many packets → can't fit in one digest → need sketches
+**Why focus on Tail Latency?**
+- The **P99** (99th-percentile) latency drives SLA (Service Level Agreements) violations.
+- A single congested switch can ruin the performance of an entire flow. We need to find the culprit.
+
+</v-click>
+
+<v-click>
+
+**How is this different from Congestion Control?**
+- **Congestion Control:** Needs the single worst bottleneck *per packet*. Fits in one digest.
+- **Tail Latency:** Requires building a statistical *distribution* across thousands of packets. You can't fit a distribution into a single header!
 
 </v-click>
 
@@ -26,13 +30,21 @@ __How is this different from congestion control?__
 
 ## Mechanism
 
+A three-step pipeline using bounded overhead
+
 <v-clicks>
 
-1. **Distributed sampling**: switches use reservoir sampling via global hash $g(p_j, i) \leq r_i$
-   - Each hop writes with $\Pr = 1/i$, later hops less likely to overwrite
-2. **End-host aggregation**: collected samples fed into a __quantile sketch__ (KLL)
-   - Bounded memory: $\tilde{O}(k \varepsilon_a^{-1})$ per-flow storage ($\tilde{O}$ hides polylogarithmic factors)
-3. **Result**: accurate median/tail latency estimates with bounded bandwidth
+1. **In-Network Sampling (Reservoir Sampling)**
+   - Switches probabilistically write their latency into the packet header.
+   - Using $g(\text{pkt}, i) \leq \frac{1}{i}$ ensures every hop on the path has an equal, fair chance to be the *one* sample that survives to the end.
+
+2. **End-Host Aggregation**
+   - The receiver extracts the winning latency sample from each arriving packet.
+   - These continuous samples are fed directly into a **quantile sketch**.
+
+3. **The Result**
+   - Accurate P99 estimates achieved with strictly bounded header space (1 value per packet).
+   - Highly memory-efficient for the receiver: $\tilde{O}(k \varepsilon^{-1})$ space per flow.
 
 </v-clicks>
 
@@ -42,21 +54,23 @@ __How is this different from congestion control?__
 
 <v-click>
 
-Remember sketches from the course?
-
-</v-click>
-
-<v-click>
-
-PINT uses __P4-compatible sketches__ at the end-host to aggregate samples
+PINT feeds the extracted samples into **KLL (Karnin-Lang-Liberty) sketches** at the end-host.
 
 </v-click>
 
 <v-clicks>
 
-- **KLL sketch** (Karnin-Lang-Liberty): mergeable quantile sketch — given latency samples, returns the $(\phi \pm \varepsilon)$-quantile using $O(\varepsilon^{-1} \log \frac{1}{\delta})$ space ($\phi \in [0,1]$ is the target quantile; $\phi = 0.99$ gives P99). Tells you: _"P99 latency is X ms"_
-- **Sliding-window sketch**: only keeps measurements from the last $W$ packets, so estimates reflect _current_ behaviour, not the full historical average
-- Sketch error converges as more packets arrive; stable after ~400 samples
+- **Mergeable Quantile Tracking**
+  - Estimates any target quantile $\phi$ (e.g., $\phi = 0.99$ for P99 latency).
+  - Guarantees an error bound of $\pm \varepsilon$ using only $O(\varepsilon^{-1} \log \frac{1}{\delta})$ space.
+  - *Answers:* "What is the current P99 latency of this flow?"
+
+- **Sliding Window Adaptation**
+  - Network conditions are highly volatile.
+  - The sketch only tracks the last $W$ packets, ensuring estimates reflect *current* bottlenecks rather than stale historical data.
+
+- **Fast Convergence**
+  - The sketch stabilizes rapidly; accurate latency distributions emerge after receiving just ~400 packets.
 
 </v-clicks>
 

@@ -57,7 +57,7 @@
 3. __Route changes__: if the route changes mid-flow, XOR equations from the two paths reference different switch sets, the system becomes inconsistent and decoding fails.
 <!-- (Requires __flowlet-level tracking__: treat each consecutive burst on the same route as a separate sub-flow and reset the equation system on route change) -->
 4. __Manual execution plan__: query engine currently requires manual configuration of bit budget allocation.
-5. __Security applications__: volume-based DDoS (SYN floods, amplification) could be detectable via flow-level aggregates — but low-rate or evasive attacks depend on spotting individual malicious packets, which probabilistic sampling misses by design.
+5. __Security applications__: volume-based DDoS (SYN floods, amplification) could be detectable via flow-level aggregates.  Low-rate or evasive attacks depend on spotting individual malicious packets, which probabilistic sampling misses by design.
 
 </v-clicks>
 

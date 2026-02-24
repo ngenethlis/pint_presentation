@@ -22,7 +22,9 @@ Key idea: spread switch IDs across many packets using __distributed encoding__
 
 ## Technique 1: Baseline (Coupon Collector)
 
-$k$ = number of switches on the path. Each switch writes its ID independently with $\Pr = \frac{1}{k}$ — a new packet reveals a previously-unseen switch with some probability
+$k$ = number of switches on the path. Each switch writes its ID independently with $\Pr = \frac{1}{k}$.
+
+We need $\mathbb{E}[\text{ \# packets to reconstruct path}] = k \ln k$ 
 
 <v-click>
 
@@ -41,12 +43,6 @@ _(Chernoff: use $1-x \leq e^{-x}$, applied to each Bernoulli trial independently
 Union bound over all $k$ switches: $\;\Pr[\text{any switch missing}] \leq k \cdot e^{-t/k}$
 
 Set $t = c\, k \ln k$: $\;\Pr[\text{any missing}] \leq k \cdot k^{-c} = k^{1-c} \to 0$ for any constant $c > 1$
-
-</v-click>
-
-<v-click>
-
-__Long tail__: the last few IDs dominate — the $k$-th ID alone takes $k$ packets in expectation
 
 </v-click>
 
@@ -97,27 +93,49 @@ Complexity: $O(k \log k)$ packets
 <XorTrace />
 
 ---
+
+## Hybrid Approach
+
+Pure Baseline: $O(k \ln k)$ + slow tail | Pure XOR: complex, slow start
+
+<v-click>
+
+__Idea: partition the hash range into $\mathcal{L}+1$ layers__
+
+For each (packet, switch) pair, the hash $g(\text{pkt}, i)$ falls into one band:
+
+$$[0,\ \tau) \;\cup\; [\tau,\ \tau+p_1) \;\cup\; [\tau+p_1,\ \tau+p_1+p_2)$$
+
+- __Layer 0 Baseline__ ($\Pr = \tau \approx 3/4$): write switch ID directly; clears easy isolated hops in $O(k)$ packets
+- **Layer 1 XOR** ($\Pr = p_1 \approx 1/k$): equations over all $k$ hops; solves most stragglers, leaves $\approx \log k$ unknowns
+- **Layer 2 XOR** ($\Pr = p_2 \approx 1/\log k$): denser equations over only the $\log k$ survivors — $p_2 \gg p_1$ because there are far fewer unknowns
+
+</v-click>
+
+<v-click>
+
+End-host decodes Layer 1 first, back-substitutes into Layer 2. In practice $\mathcal{L}=2$ is enough: unknowns shrink $k \to \log k \to \log\log k \approx O(1)$.
+
+</v-click>
+
+---
 layout: default
 ---
 
-## Hybrid Approach Worked Example with ($k = 5$, $\mathcal{L}=2$)
+### Hybrid: Worked Example ($k = 5$, $\mathcal{L}=2$)
 
-Pure Baseline: simple but slow | Pure XOR: efficient but complex 
-
-__Interleave protocols__
-Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR ($1 - \tau = 1/4$)
-
+Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR layer ($1-\tau = 1/4$)
 
 <HybridTrace />
 
 ---
 
-### Comparison ($k = 25$)
+###  Packets Required for Full Path Recovery($k = 25$)
 
 | | Baseline | XOR only | Hybrid (2 layers) |
 |--|----------|----------|-------------------|
-| Median packets | 89 | ~80 | __41__ |
-| 99th pct packets | 189 | ~150 | __68__ |
+| Median | 89 | ~80 | __41__ |
+| 99th pct | 189 | ~150 | __68__ |
 | Complexity | $k \ln k$ | $O(k \log k)$ | $k \log \log^* k$ |
 
 Baseline finds most hops fast, XOR layers __clean up the stragglers__
@@ -142,12 +160,12 @@ For Kentucky Datalink ($D = 59$): PINT needs only __42 packets__ on average
 
 ## Theorem 3 — Hybrid Complexity
 
-> After $k \log \log^* k \cdot (1 + o(1))$ packets, the multilayer scheme recovers all $k$ switch IDs with high probability.
+After $k \log \log^* k \cdot (1 + o(1))$ packets, the multilayer scheme recovers all $k$ switch IDs with high probability.
 
 <v-click>
 
 __Proof sketch__:
-- __Baseline__, $\tau \approx 3/4$: each switch appears with prob $\tau$ per packet. After $O(k)$ packets, a constant fraction remain _(Chernoff: expected stragglers $(1-\tau)^{O(k)} \cdot k$ concentrates tightly)_. Those that haven't appeared form the "straggler" set.
+- __Baseline__, $\tau \approx 3/4$: each switch appears with prob $\tau$ per packet. After $O(k)$ packets, a constant fraction remain. Those that haven't appeared form the "straggler" set. _(Chernoff: expected stragglers $(1-\tau)^{O(k)} \cdot k$)_.
 - __XOR__: collects equations over the stragglers. When $m$ unknowns remain, the XOR system becomes solvable after $O(m \log m)$ new packets.
 - With $\mathcal{L}$ XOR layers: unknowns shrink by a $\log$ factor each layer, giving $O(k \log^{(\mathcal{L})} k)$ total packets.
 

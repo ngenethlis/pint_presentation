@@ -126,9 +126,11 @@ Bullet points per slide. Italics = things to say out loud. Plain = reminders.
 
 ## Slide: Hybrid Approach
 
-- _"Pure baseline is simple but needs k ln k packets. Pure XOR is more efficient but every packet contributes only one equation — can be slow to start."_
-- _"Hybrid interleaves both. A Baseline layer at probability τ = 3/4 catches the easy isolated hops quickly. XOR layers clean up the stragglers."_
-- _"In practice 1 to 2 XOR layers are enough. The worked example recovers all 5 switches in 6 packets versus about 12 expected for pure baseline."_
+- _"Hybrid partitions the hash range into L+1 non-overlapping bands. τ is fixed — that's always the Baseline share. What L controls is how many XOR bands sit in the remaining [τ, 1) range."_
+- _"Layer 0 — Baseline at probability τ ≈ 3/4 — writes single switch IDs directly and clears most hops in O(k) packets."_
+- _"Layer 1 XOR uses probability p₁ ≈ 1/k. It generates equations over all k remaining unknowns and reduces the straggler set from k down to about log k."_
+- _"Layer 2 XOR uses probability p₂ ≈ 1/log k — much higher than p₁, because there are far fewer unknowns now. Denser equations over a smaller set converge quickly."_
+- _"The end-host decodes Layer 1 first, back-substitutes into Layer 2. L=2 takes unknowns from k → log k → log log k, which is effectively constant. That's where the k log log* k bound comes from."_
 
 ---
 
