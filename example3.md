@@ -1,4 +1,4 @@
-# Dynamic Per-flow Aggregation
+# Dynamic Per-flow Aggregation : Latency Estimation
 
 Tracking metrics that change packet-by-packet
 
@@ -35,8 +35,8 @@ A three-step pipeline using bounded overhead
 <v-clicks>
 
 1. **In-Network Sampling (Reservoir Sampling)**
-   - Switches probabilistically write their latency into the packet header.
-   - Using $g(\text{pkt}, i) \leq \frac{1}{i}$ ensures every hop on the path has an equal, fair chance to be the *one* sample that survives to the end.
+   - Switch at hop $i$ writes its latency into the digest with probability $\frac{1}{i}$; later hops write less often.
+   - Despite unequal write probabilities, every hop survives as the final sample with probability exactly $\frac{1}{k}$: the telescoping product $\frac{1}{i} \cdot \frac{i}{k} = \frac{1}{k}$ cancels out the bias.
 
 2. **End-Host Aggregation**
    - The receiver extracts the winning latency sample from each arriving packet.
@@ -44,7 +44,7 @@ A three-step pipeline using bounded overhead
 
 3. **The Result**
    - Accurate P99 estimates achieved with strictly bounded header space (1 value per packet).
-   - Highly memory-efficient for the receiver: $\tilde{O}(k \varepsilon^{-1})$ space per flow.
+   - Highly memory-efficient for the receiver.
 
 </v-clicks>
 

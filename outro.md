@@ -1,37 +1,32 @@
 # Evaluation
 
-<v-clicks>
+Tested on real topologies and traffic traces (CAIDA, Kentucky Datalink)
 
-#### Congestion Control (HPCC)
+<v-click>
 
+**Congestion Control (HPCC)**
+- Flow completion time matched full-overhead INT; goodput better for long flows
+- Sampling only $\tfrac{1}{16}$ of packets is sufficient — most overhead eliminated
+- **71% goodput improvement** over standard INT at 70% link load
 
-- Similar FCT to full-overhead INT, better goodput for long flows
-- Works well even when only $p = 1/16$ of packets carry the query digest
-- At 70% load: __71% goodput improvement__ over standard INT
+</v-click>
 
-</v-clicks>
+<v-click>
 
+**Path Tracing**
+- Kentucky Datalink ($D = 59$ hops): **42 packets** on average to recover the full path
+- Competing methods (PPM, AMS) require 1,000–5,000+ packets: a **25–36× reduction**
 
-<v-clicks>
+</v-click>
 
-#### Path Tracing
+<v-click>
 
+**Tail / Median Latency**
+- P50 and P99 error within configured $\varepsilon$ across all tested flows
+- Sliding-window sketch ($W = 400$ packets) stabilises within one window length
+- 8-bit budget sufficient for accurate quantile recovery on CAIDA traces
 
-- Kentucky Datalink ($D=59$): only __42 packets__ avg to trace full path
-- Competing methods (PPM, AMS) need __1000-5000+ packets__
-- 25-36x fewer packets than state-of-the-art
-
-</v-clicks>
-
-<v-clicks>
-
-#### Tail / Median Latency Estimation
-
-- P50 and P99 relative error stays __within configured $\varepsilon$__ using KLL sketch
-- Sliding-window sketch (W = 400) stabilises within one window length
-- Tested on CAIDA traces: both median and tail accurately recovered with __8-bit budget__
-
-</v-clicks>
+</v-click>
 
 ---
 

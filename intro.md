@@ -71,7 +71,6 @@ __Probabilistic Encoding__
 
 __What can 1 bit do?__ Encode a binary threshold signal 
 - _"is link utilization above 80%?"_ 
-- contribute to probabilistic path tracing with very low sample probability
 
 </v-click>
 

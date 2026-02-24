@@ -146,8 +146,6 @@ Baseline finds most hops fast; XOR layers __clean up the stragglers__
 
 $\log^* k$ is the iterated logarithm: the number of $\log_2$ applications required until the value drops to $\leq 1$.
 
-$$\log^*(k) = \begin{cases} 0 & k \leq 1 \\ 1 + \log^*(\log_2 k) & k > 1 \end{cases}$$
-
 </v-click>
 
 <v-click>
