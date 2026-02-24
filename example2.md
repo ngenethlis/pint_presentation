@@ -74,13 +74,13 @@ The receiver uses the same hash $g$ to reconstruct which switches participated
 
 Decode by __Gaussian elimination over $\mathbb{F}_2$__:
 - Equation with **one unknown** $s_i$: directly solve, then back-substitute into all other equations containing $s_i$
-- This may reduce further equations to one-unknown — peel off iteratively
+- This may reduce further equations to one unknown; peel off iteratively
 
 </v-click>
 
 <v-click>
 
-__Advantage over Baseline__: equations share information across packets — knowing $S_3 \oplus S_4$ from one packet and $S_4$ from another gives $S_3$ for free; Baseline requires each switch to be written independently
+__Advantage over Baseline__: equations share information across packets. Knowing $S_3 \oplus S_4$ from one packet and $S_4$ from another gives $S_3$ for free; Baseline requires each switch to be written independently
 
 Complexity: $O(k \log k)$ packets
 
@@ -108,7 +108,7 @@ $$[0,\ \tau) \;\cup\; [\tau,\ \tau+p_1) \;\cup\; [\tau+p_1,\ \tau+p_1+p_2)$$
 
 - __Layer 0 Baseline__ ($\Pr = \tau \approx 3/4$): write switch ID directly; clears easy isolated hops in $O(k)$ packets
 - **Layer 1 XOR** ($\Pr = p_1 \approx 1/k$): equations over all $k$ hops; solves most stragglers, leaves $\approx \log k$ unknowns
-- **Layer 2 XOR** ($\Pr = p_2 \approx 1/\log k$): denser equations over only the $\log k$ survivors — $p_2 \gg p_1$ because there are far fewer unknowns
+- **Layer 2 XOR** ($\Pr = p_2 \approx 1/\log k$): denser equations over only the $\log k$ survivors ($p_2 \gg p_1$ since far fewer unknowns remain)
 
 </v-click>
 
@@ -138,7 +138,9 @@ Each packet: hash decides → Baseline ($\tau = 3/4$) or XOR layer ($1-\tau = 1/
 | 99th pct | 189 | ~150 | __68__ |
 | Complexity | $k \ln k$ | $O(k \log k)$ | $k \log \log^* k$ |
 
-Baseline finds most hops fast, XOR layers __clean up the stragglers__
+_(Both $k \ln k$ and $O(k \log k)$ are $\Theta(k \log k)$; they use different log bases and differ only by a constant factor $\approx 0.693$)_
+
+Baseline finds most hops fast; XOR layers __clean up the stragglers__
 
 <v-click>
 
@@ -158,7 +160,7 @@ For Kentucky Datalink ($D = 59$): PINT needs only __42 packets__ on average
 
 ---
 
-## Theorem 3 — Hybrid Complexity
+## Theorem 3: Hybrid Complexity
 
 After $k \log \log^* k \cdot (1 + o(1))$ packets, the multilayer scheme recovers all $k$ switch IDs with high probability.
 

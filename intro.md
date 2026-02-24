@@ -84,7 +84,7 @@ Implemented in __P4__. PINT runs entirely _inside_ the switch, adding zero softw
 
 ---
 
-# PINT Architecture
+## PINT Architecture
 
 <v-click>
 
@@ -156,6 +156,6 @@ Three aggregation modes:
 
 # Global Hashing in Action
 
-Per-flow sampling: switch at hop $i$ writes if $g(\text{pkt}, i) < \tfrac{1}{i}$ — later hops less likely to overwrite
+Per-flow sampling: switch at hop $i$ writes if $g(\text{pkt}, i) < \tfrac{1}{i}$, so later hops are less likely to overwrite
 
 <PacketTrace />

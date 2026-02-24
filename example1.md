@@ -20,7 +20,7 @@ __PINT approach__:
 
 __What the receiver does with it__: sends the 8-bit bottleneck digest back to the sender, which computes a new rate:
 $$\text{rate} \leftarrow \text{BW} \times (1 - U_\text{max})$$
-Same accuracy as reading all per-hop values — using __1 byte__ instead of 25+
+Same accuracy as reading all per-hop values, using __1 byte__ instead of 25+
 
 </v-click>
 
@@ -28,7 +28,7 @@ Same accuracy as reading all per-hop values — using __1 byte__ instead of 25+
 
 ## Why Multiplicative, Not Additive?
 
-We can only use 8 bits — how to encode a 32-bit utilization value?
+We can only use 8 bits. How do we encode a 32-bit utilization value?
 
 <v-click>
 
